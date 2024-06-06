@@ -74,26 +74,31 @@ void motor_B_control(int direction_b, int motor_speed_b)
 
 void check_maze_status(void)
 {
+  // 모든 방향에 벽이 있을 때
   if((left_sonar >= 0) && (left_sonar <= WALL_GAP_DISTANCE) && (right_sonar >= 0) && (right_sonar <= WALL_GAP_DISTANCE) && (front_sonar >= 0) && (front_sonar <= WALL_GAP_DISTANCE_HALF))
   {
     maze_status = 4;  // 모든 방향에 벽이 있을 때
     Serial.println("maze_status = 4");
   }
+  // 앞쪽에 벽이 없을 때
   else if((left_sonar >= 0) && (left_sonar <= WALL_GAP_DISTANCE) && (right_sonar >= 0) && (right_sonar <= WALL_GAP_DISTANCE) && (front_sonar >= WALL_GAP_DISTANCE_HALF))
   {
     maze_status = 1;  // 앞쪽에 벽이 없을 때
     Serial.println("maze_status = 1");
   }
+  // 오른쪽에 벽이 없을 때
   else if((left_sonar >= 0) && (left_sonar <= WALL_GAP_DISTANCE) && (front_sonar >= 0) && (front_sonar <= WALL_GAP_DISTANCE_HALF))
   {
     maze_status = 2;  // 오른쪽에 벽이 없을 때
     Serial.println("maze_status = 2");
   }
+  // 왼쪽에 벽이 없을 때
   else if((right_sonar >= 0) && (right_sonar <= WALL_GAP_DISTANCE) && (front_sonar >= 0) && (front_sonar <= WALL_GAP_DISTANCE_HALF))
   {
     maze_status = 3;  // 왼쪽에 벽이 없을 때
     Serial.println("maze_status = 3");
   }
+  // 미로 상태를 알 수 없을 때
   else
   {
     maze_status = 0;  // 미로 상태를 알 수 없을 때
@@ -134,4 +139,36 @@ void loop()
 
   if(front_sonar == 0.0) front_sonar = MAX_DISTANCE * 10;  // 앞쪽 거리 값이 0일 때 최대 거리로 설정
   if(left_sonar == 0.0) left_sonar = MAX_DISTANCE * 10;  // 왼쪽 거리 값이 0일 때 최대 거리로 설정
-  if(right_sonar == 0.0) right_sonar = MAX_DISTANCE * 10;  // 오른쪽 거리 값이
+  if(right_sonar == 0.0) right_sonar = MAX_DISTANCE * 10;  // 오른쪽 거리 값이 0일 때 최대 거리로 설정
+
+  check_maze_status();  // 미로 상태 확인
+
+  // 벽 회피 알고리즘을 실행
+  if(maze_status == 1)
+  {
+    wall_collision_avoid(100);  // 벽 회피 알고리즘 실행
+  }
+  else if(maze_status == 2)
+  {
+    motor_A_control(HIGH, 100);  // 왼쪽 모터 앞으로
+    motor_B_control(HIGH, 0);  // 오른쪽 모터 정지
+    delay(500);  // 0.5초 지연
+  }
+  else if(maze_status == 3)
+  {
+    motor_A_control(HIGH, 0);  // 왼쪽 모터 정지
+    motor_B_control(HIGH, 100);  // 오른쪽 모터 앞으로
+    delay(500);  // 0.5초 지연
+  }
+  else if(maze_status == 4)
+  {
+    motor_A_control(HIGH, 0);  // 왼쪽 모터 정지
+    motor_B_control(HIGH, 0);  // 오른쪽 모터 정지
+    delay(1000);  // 1초 지연
+  }
+  else
+  {
+    motor_A_control(HIGH, 0);  // 왼쪽 모터 정지
+    motor_B_control(HIGH, 0);  // 오른쪽 모터 정지
+  }
+}
